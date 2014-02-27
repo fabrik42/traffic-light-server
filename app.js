@@ -78,6 +78,7 @@ app.post('/travis/:secret', function(req, res) {
   if(!authorize(req, res)) return;
 
   db.set('trafficlight:travis:last', req.body);
+  res.send(201);
 });
 
 app.get('/travis/:secret', function(req, res){
