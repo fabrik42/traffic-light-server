@@ -78,9 +78,9 @@ app.post('/travis/:secret', function(req, res) {
   if(!authorize(req, res)) return;
 
   console.info("*** TRAVIS CI WEBHOOK");
-  console.dir(req.body);
+  console.info(req.body);
 
-  db.set('trafficlight:travis:last', req.body.status_message);
+  //db.set('trafficlight:travis:last', req.body.status_message);
   res.send(201);
 });
 
