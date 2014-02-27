@@ -1,4 +1,4 @@
-(function(win, $){
+(function (win, $) {
   'use strict';
 
   var data = {};
@@ -22,7 +22,7 @@
   }
 
   function poll() {
-    if(pollTimeout) win.clearTimeout(pollTimeout);
+    if (pollTimeout) win.clearTimeout(pollTimeout);
     win.setTimeout(load, pollPeriod);
   }
 
