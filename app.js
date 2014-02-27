@@ -2,7 +2,7 @@ var express = require('express');
 var redis = require('redis');
 var path = require('path');
 
-var db = redis.createClient();
+var db;
 var app = express();
 
 var COLORS = ['red', 'yellow', 'green'];
@@ -20,6 +20,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // development only
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
+  var redisUrl = require("url").parse(process.env.REDISTOGO_URL);
+  db = redis.createClient(redisUrl.port, redisUrl.hostname);
+  db.auth(redisUrl.auth.split(":")[1]);
+} else {
+  db = redis.createClient();
 }
 
 function authorize(req, res) {
