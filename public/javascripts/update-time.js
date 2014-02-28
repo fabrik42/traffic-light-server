@@ -15,7 +15,7 @@
       pad(date.getSeconds())
     ].join(':');
 
-    el.text('Last Update: ' + dateStr + '(' + data.mode + ')');
+    el.text(['Last Update: ', dateStr, ' (', data.mode, ')'].join(''));
   }
 
   $(function () {

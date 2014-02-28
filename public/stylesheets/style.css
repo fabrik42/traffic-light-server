@@ -1,19 +1,36 @@
 body {
   font-family: Helvetica, Arial, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  color: #2f2f2f;
   line-height: 1.4em;
   text-align: center;
-}
-
-#top-bar {
-  height: 3px;
-  background: red;
 }
 
 #container {
   padding: 10px;
   background: #fff;
 }
+
+/** TOP BAR **/
+
+#top-bar {
+  height: 3px;
+  background: #2d2b2e;
+}
+
+#top-bar.red {
+  background: #b71817;
+}
+
+#top-bar.yellow {
+  background: #efb406;
+}
+
+#top-bar.green {
+  background: #01772d;
+}
+
+/** LIGHT SWITCH **/
 
 #switch {
   margin:10px auto;
@@ -57,4 +74,3 @@ body {
 #switch li a[data-color='green'].on {
   background-image: url('/images/green-on.png');
 }
-
