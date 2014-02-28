@@ -23,7 +23,7 @@
 
   function poll() {
     if (pollTimeout) win.clearTimeout(pollTimeout);
-    win.setTimeout(load, pollPeriod);
+    pollTimeout = win.setTimeout(load, pollPeriod);
   }
 
   win.TrafficLight = {
