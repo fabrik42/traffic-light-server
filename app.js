@@ -1,11 +1,12 @@
 var express = require('express');
 var redis = require('redis');
 var path = require('path');
-
-var db;
-var app = express();
+var url = require('url');
 
 var COLORS = ['red', 'yellow', 'green'];
+
+var app = express();
+var db;
 
 app.set('secret', process.env.TRAVIS_CI_SECRET);
 app.set('port', process.env.PORT || 3000);
@@ -18,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 if (app.get('env') === 'production') {
   app.use(express.errorHandler());
-  var redisUrl = require("url").parse(process.env.REDISTOGO_URL);
+  var redisUrl = url.parse(process.env.REDISTOGO_URL);
   db = redis.createClient(redisUrl.port, redisUrl.hostname);
   db.auth(redisUrl.auth.split(":")[1]);
 } else {
@@ -49,44 +50,46 @@ function setColor(color, mode) {
 
 function getColors(callback) {
   var mode = getLightMode();
+  var data = { mode: getLightMode() };
 
   if (mode === 'public') {
-    getPublicColors(callback);
+    getPublicColors(callback, data);
   } else if (mode === 'ci') {
-    getTravisColors(callback);
+    getTravisColors(callback, data);
   }
 }
 
-function getPublicColors(callback) {
+function getPublicColors(callback, data) {
   var arr = COLORS.map(function (color) { return 'trafficlight:' + color; });
 
   db.mget(arr, function (err, states) {
-    var colors = { mode: getLightMode() };
     COLORS.forEach(function (color, index) {
-      colors[color] = states[index] === 'true';
+      data[color] = states[index] === 'true';
     });
-    callback(null, colors);
+    callback(null, data);
   });
 }
 
-function getTravisColors(callback) {
+function getTravisColors(callback, data) {
   db.get('trafficlight:travis', function (err, travisState) {
-    var colors = { mode: getLightMode() };
-    COLORS.forEach(function (color) { colors[color] = false; });
+    COLORS.forEach(function (color) { data[color] = false; });
 
     switch (travisState) {
-    case 'finished':
-      colors.green = true;
-      break;
     case 'started':
-      colors.yellow = true;
+    case 'queued':
+      data.yellow = true;
       break;
     case 'errored':
-      colors.red = true;
+    case 'canceled':
+      data.red = true;
+      break;
+    case 'finished':
+    case 'passed':
+      data.green = true;
       break;
     }
 
-    callback(null, colors);
+    callback(null, data);
   });
 }
 
@@ -97,12 +100,15 @@ function getLightMode() {
 }
 
 function extractTravisState(payload) {
-  var states = payload.matrix.map(function(matrix) { return matrix.state });
+  var states = payload.matrix.map(function (matrix) { return matrix.state; });
 
   var order = {
     started:  0,
+    queued:   0,
     errored:  1,
-    finished: 2
+    canceled: 1,
+    finished: 2,
+    passed:   2
   };
 
   var sorted = states.sort(function (a, b) {
@@ -145,12 +151,10 @@ app.post('/travis/:secret', function (req, res) {
   if (!authorizeTravis(req, res)) return;
 
   var payload = JSON.parse(req.body.payload);
+  var state = extractTravisState(payload);
+  db.set('trafficlight:travis', state);
 
-  console.warn("--- TRAVIS CI WEBHOOK ---");
-  console.warn(extractTravisState(payload));
-  console.warn("--- TRAVIS CI WEBHOOK END ---");
-
-  db.set('trafficlight:travis', extractTravisState(payload));
+  console.warn('--- NEW TRAVIS CI STATE ---> ' + state);
   res.send(201);
 });
 
