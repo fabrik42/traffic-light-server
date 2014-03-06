@@ -154,6 +154,16 @@ app.post('/travis/:secret', function (req, res) {
   var state = extractTravisState(payload);
   db.set('trafficlight:travis', state);
 
+
+
+  console.warn('--- THIS1? ---> ' + payload.status);
+  console.warn('--- THIS2? ---> ' + payload.status_message);
+  payload.matrix.forEach(function (matrix, idx) {
+    console.warn('--- THIS3-' + idx +' ? ---> ' + matrix.state);
+  });
+
+
+
   console.warn('--- NEW TRAVIS CI STATE ---> ' + state);
   res.send(201);
 });
