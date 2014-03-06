@@ -70,21 +70,25 @@ function getPublicColors(callback, data) {
   });
 }
 
+// parse status message based on
+// https://github.com/travis-ci/travis-core/blob/master/lib/travis/model/build/result_message.rb
 function getTravisColors(callback, data) {
   db.get('trafficlight:travis', function (err, travisState) {
     COLORS.forEach(function (color) { data[color] = false; });
 
     switch (travisState) {
-    case 'started':
-    case 'queued':
-      data.yellow = true;
-      break;
-    case 'errored':
-    case 'canceled':
+    case 'Failed':
+    case 'Broken':
+    case 'Still Failing':
+    case 'Errored':
+    case 'Canceled':
       data.red = true;
       break;
-    case 'finished':
-    case 'passed':
+    case 'Pending':
+      data.yellow = true;
+      break;
+    case 'Passed':
+    case 'Fixed':
       data.green = true;
       break;
     }
@@ -97,30 +101,6 @@ function getLightMode() {
   var mode = process.env.LIGHT_MODE;
   if (mode !== 'public' && mode !== 'ci') throw('Unknown light mode!');
   return mode;
-}
-
-function extractTravisState(payload) {
-  var states = payload.matrix.map(function (matrix) { return matrix.state; });
-
-  var order = {
-    started:  0,
-    queued:   0,
-    errored:  1,
-    canceled: 1,
-    finished: 2,
-    passed:   2
-  };
-
-  var sorted = states.sort(function (a, b) {
-    if(order[a] > order[b])
-      return 1;
-    else if(order[a] < order[b])
-      return -1;
-    else
-      return 0;
-  });
-
-  return sorted[0];
 }
 
 app.get('/', function (req, res) {
@@ -151,20 +131,8 @@ app.post('/travis/:secret', function (req, res) {
   if (!authorizeTravis(req, res)) return;
 
   var payload = JSON.parse(req.body.payload);
-  var state = extractTravisState(payload);
-  db.set('trafficlight:travis', state);
+  db.set('trafficlight:travis', payload.status_message);
 
-
-
-  console.warn('--- THIS1? ---> ' + payload.status);
-  console.warn('--- THIS2? ---> ' + payload.status_message);
-  payload.matrix.forEach(function (matrix, idx) {
-    console.warn('--- THIS3-' + idx +' ? ---> ' + matrix.state);
-  });
-
-
-
-  console.warn('--- NEW TRAVIS CI STATE ---> ' + state);
   res.send(201);
 });
 
