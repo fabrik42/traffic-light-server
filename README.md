@@ -48,6 +48,11 @@ In `ci` mode the web UI is read-only and only shows the current status.
 }
 ```
 
+curl example:
+
+```
+curl https://yourapp.herokuapp.com/lights
+```
 
 #### POST `/lights`
 
