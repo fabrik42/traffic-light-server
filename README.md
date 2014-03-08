@@ -29,7 +29,7 @@ Besides, there are two environment variables that need to be set:
 
 ### Web UI
 
-![web ui screenshot](http://imgur.com/CohDwAd)
+![web ui screenshot](http://imgur.com/CohDwAd.png)
 
 When in `public` mode, the light configuration can be changed by clicking on the corresponding lights on the UI.
 
@@ -67,3 +67,24 @@ curl -i -H "Content-Type: application/json" -X POST -d '{ "yellow" : true, "gree
 
 ### TravisCI webhooks
 
+Pick and set a random secret for the webhook URL:
+
+```
+heroku config:set TRAVIS_CI_SECRET=YOURSECRET
+```
+
+Then add the webhook to your `.travis.yml` file:
+
+```yaml
+notifications:
+  webhooks:
+    urls:
+      - https://yourapp.herokuapp.com/travis/YOURSECRET
+    on_success: always
+    on_failure: always
+    on_start: true
+```
+
+### Change mode
+
+Just change the heroku env variable like this `heroku config:set LIGHT_MODE=public`, heroku will automatically restart your app.
