@@ -93,3 +93,10 @@ notifications:
 ### Change mode
 
 Just change the heroku env variable like this `heroku config:set LIGHT_MODE=public`, heroku will automatically restart your app.
+
+
+
+
+========================
+
+:traffic_light: :heart: :traffic_light:
