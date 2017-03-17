@@ -8,7 +8,7 @@ var COLORS = ['red', 'yellow', 'green'];
 var app = express();
 var db;
 
-app.set('secret', process.env.TRAVIS_CI_SECRET);
+app.set('secret', process.env.CI_SECRET);
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -26,7 +26,7 @@ if (app.get('env') === 'production') {
   db = redis.createClient();
 }
 
-function authorizeTravis(req, res) {
+function authorizeWebhook(req, res) {
   if (app.get('secret') !== req.params.secret) {
     res.send(401);
     return false;
@@ -55,7 +55,7 @@ function getColors(callback) {
   if (mode === 'public') {
     getPublicColors(callback, data);
   } else if (mode === 'ci') {
-    getTravisColors(callback, data);
+    getCiColors(callback, data);
   }
 }
 
@@ -70,25 +70,25 @@ function getPublicColors(callback, data) {
   });
 }
 
-// parse status message based on
-// https://github.com/travis-ci/travis-core/blob/master/lib/travis/model/build/result_message.rb
-function getTravisColors(callback, data) {
-  db.get('trafficlight:travis', function (err, travisState) {
+// parse build status based on
+// https://documentation.codeship.com/basic/getting-started/webhooks/
+function getCiColors(callback, data) {
+  db.get('trafficlight:ci', function (err, buildStatus) {
     COLORS.forEach(function (color) { data[color] = false; });
 
-    switch (travisState) {
-    case 'Failed':
-    case 'Broken':
-    case 'Still Failing':
-    case 'Errored':
-    case 'Canceled':
+    switch (buildStatus) {
+    case 'error':
+    case 'stopped':
+    case 'ignored':
+    case 'blocked':
+    case 'infrastructure_failure':
       data.red = true;
       break;
-    case 'Pending':
+    case 'testing':
+    case 'waiting':
       data.yellow = true;
       break;
-    case 'Passed':
-    case 'Fixed':
+    case 'success':
       data.green = true;
       break;
     }
@@ -127,21 +127,13 @@ app.post('/lights', function (req, res) {
   });
 });
 
-app.post('/travis/:secret', function (req, res) {
-  if (!authorizeTravis(req, res)) return;
+app.post('/ci/:secret', function (req, res) {
+  if (!authorizeWebhook(req, res)) return;
 
-  var payload = JSON.parse(req.body.payload);
-  db.set('trafficlight:travis', payload.status_message);
+  var status = req.body.build.status;
+  db.set('trafficlight:ci', status);
 
   res.send(201);
-});
-
-app.get('/travis/:secret', function (req, res){
-  if (!authorizeTravis(req, res)) return;
-
-  db.get('trafficlight:travis:last', function (err, data) {
-    res.send(data);
-  });
 });
 
 app.listen(app.get('port'));
