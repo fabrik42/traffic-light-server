@@ -39,7 +39,7 @@ In `ci` mode the web UI is read-only and only shows the current status.
 
 #### GET `/lights`
 
-```json
+```js
 {
   "mode": "public", // read only (set via heroku config:set LIGHT_MODE=public|ci)
   "red": true,      // boolean
@@ -56,7 +56,7 @@ curl https://yourapp.herokuapp.com/lights
 
 #### POST `/lights`
 
-```json
+```js
 {
   "red": true,      // boolean
   "yellow": true,   // boolean
