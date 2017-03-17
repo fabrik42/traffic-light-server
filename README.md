@@ -14,7 +14,7 @@ At the moment two modes for setting the lights are supported:
 
 * `public` changes the traffic light using the web UI or the JSON API.
 
-* `ci` uses [webhooks from TravisCI](http://docs.travis-ci.com/user/notifications/#Webhook-notification) to set the lights.
+* `ci` uses [webhooks from Codeship](https://documentation.codeship.com/basic/getting-started/webhooks/) to set the lights.
 
 ## Setup
 
@@ -22,7 +22,7 @@ This app ist meant to run on heroku using the RedisToGo add-on for persistence.
 
 Besides, there are two environment variables that need to be set:
 
-* `heroku config:set TRAVIS_CI_SECRET=YOURSECRET` Sets the secret URL for travis CI webhooks.
+* `heroku config:set CI_SECRET=YOURSECRET` Sets the secret URL for CI webhook.
 * `heroku config:set LIGHT_MODE=public` Sets the mode of the traffic light server. Possible values: `public` or `ci`.
 
 ## Controlling the traffic light configuration
@@ -70,25 +70,15 @@ curl example:
 curl -i -H "Content-Type: application/json" -X POST -d '{ "yellow" : true, "green" : true, "red" : true }' https://yourapp.herokuapp.com/lights
 ```
 
-### TravisCI webhooks
+### CI webhooks
 
 Pick and set a random secret for the webhook URL:
 
 ```
-heroku config:set TRAVIS_CI_SECRET=YOURSECRET
+heroku config:set CI_SECRET=YOURSECRET
 ```
 
-Then add the webhook to your `.travis.yml` file:
-
-```yaml
-notifications:
-  webhooks:
-    urls:
-      - https://yourapp.herokuapp.com/travis/YOURSECRET
-    on_success: always
-    on_failure: always
-    on_start: true
-```
+Then add the webhook to the notification settings of your codeship project.
 
 ### Change mode
 
